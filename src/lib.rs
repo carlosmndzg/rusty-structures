@@ -33,6 +33,34 @@ impl<T> LinkedList<T> {
         current.as_mut().unwrap().next = Some(Box::new(Node { value, next: None }))
     }
 
+    pub fn remove(&mut self, index: usize) -> T {
+        if index >= self.len {
+            panic!("index out of bounds");
+        }
+
+        self.len -= 1;
+
+        if index == 0 {
+            let Node { value, next } = *self.head.take().unwrap();
+
+            self.head = next;
+
+            return value;
+        }
+
+        let mut head = &mut self.head;
+
+        for _ in 0..(index - 1) {
+            head = &mut head.as_mut().unwrap().next;
+        }
+
+        let Node { value, next } = *head.as_mut().unwrap().next.take().unwrap();
+
+        head.as_mut().unwrap().next = next;
+
+        value
+    }
+
     pub fn len(&self) -> usize {
         self.len
     }
@@ -43,13 +71,10 @@ impl<T> LinkedList<T> {
         }
 
         let mut head = &self.head;
-        let mut current_index = 0;
 
-        while current_index < index {
+        for _ in 0..index {
             head = &head.as_ref().unwrap().next;
-            current_index += 1;
         }
-
 
         Some(&head.as_ref().unwrap().value)
     }
@@ -88,5 +113,70 @@ mod tests {
         assert_eq!(Some(&25), linked_list.get(1));
         assert_eq!(Some(&75), linked_list.get(2));
         assert_eq!(3, linked_list.len());
+    }
+
+    #[test]
+    fn get_out_of_bounds() {
+        let mut linked_list = LinkedList::new();
+
+        linked_list.push(5);
+        linked_list.push(25);
+        linked_list.push(75);
+
+        assert_eq!(None, linked_list.get(3));
+    }
+
+    #[test]
+    fn remove_first() {
+        let mut linked_list = LinkedList::new();
+
+        linked_list.push(5);
+        linked_list.push(25);
+        linked_list.push(75);
+
+        assert_eq!(5, linked_list.remove(0));
+        assert_eq!(Some(&25), linked_list.get(0));
+        assert_eq!(Some(&75), linked_list.get(1));
+        assert_eq!(2, linked_list.len());
+    }
+
+    #[test]
+    fn remove_last() {
+        let mut linked_list = LinkedList::new();
+
+        linked_list.push(5);
+        linked_list.push(25);
+        linked_list.push(75);
+
+        assert_eq!(75, linked_list.remove(2));
+        assert_eq!(Some(&5), linked_list.get(0));
+        assert_eq!(Some(&25), linked_list.get(1));
+        assert_eq!(2, linked_list.len());
+    }
+
+    #[test]
+    fn remove_middle() {
+        let mut linked_list = LinkedList::new();
+
+        linked_list.push(5);
+        linked_list.push(25);
+        linked_list.push(75);
+
+        assert_eq!(25, linked_list.remove(1));
+        assert_eq!(Some(&5), linked_list.get(0));
+        assert_eq!(Some(&75), linked_list.get(1));
+        assert_eq!(2, linked_list.len());
+    }
+
+    #[test]
+    #[should_panic(expected = "index out of bounds")]
+    fn remove_out_of_bounds() {
+        let mut linked_list = LinkedList::new();
+
+        linked_list.push(5);
+        linked_list.push(25);
+        linked_list.push(75);
+
+        linked_list.remove(3);
     }
 }
